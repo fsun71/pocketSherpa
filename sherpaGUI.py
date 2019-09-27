@@ -49,69 +49,93 @@ def launchGUI():
 	backgroundColor = '#4266a1'
 	sg.SetOptions(background_color = backgroundColor, element_background_color = backgroundColor)
 
+	mountainsComplete = 0
+	mountainsCompleteStr = str(mountainsComplete) + ' of 58'
+	mountainsCompleteList = []
+
 	col1 = [[sg.Button('Suggest a 14er for me', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'suggest')]]
 	col2 = [[sg.Button('14er Checklist', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'checklist')]]
 	col3 = [[sg.Button('Exit', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'exit')]]
 
-	numComplete = [[sg.Text('0/58', text_color = 'white', font=("Arial Black", 20), key = 'numComplete')]]
+	numComplete = [[sg.Text(mountainsCompleteStr, text_color = 'white', font=("Arial Black", 20), key = 'numComplete')]]
 	ranges = [[sg.Listbox(values=['Front Range', 'Tenmile Range', 'Mosquito Range', 'Sawatch Range', 'Elk Mountains', 'San Juan Mountains', 'Sangre de Cristo Mountains'], size=(30, 10), key = 'ranges', enable_events = True),
 			   sg.Listbox(values=[], size=(30, 10), key = 'mountains', enable_events = True)]]
 
+	editMtnList = [[sg.Button('Add Mountain', size = (16, 1), key = 'addMtn', visible = False)], 
+				[sg.Button('Remove Mountain', size = (16, 1), key = 'removeMtn', visible = False)]]
+
 	homeLayout = [  [sg.Text('Pocket Sherpa', size = (200, 1), justification='center', font=("Arial Black", 30), text_color = 'white', pad=((0,0),20))],
 				#[sg.Text(suggestMountain(1, 1, 1, 6, 10, 1), size = (200, 1), justification='center', font=("Arial Black", 16), text_color = 'white')],
-	            [sg.Column(col1, justification = 'center', element_justification = 'center', pad=((0,0),(30, 10)))],
-	            [sg.Column(col2, justification = 'center', element_justification = 'center')],
-	            [sg.Column(col3, justification = 'center', element_justification = 'center')] ]
+				[sg.Column(col1, justification = 'center', element_justification = 'center', pad=((0,0),(30, 10)))],
+				[sg.Column(col2, justification = 'center', element_justification = 'center')],
+				[sg.Column(col3, justification = 'center', element_justification = 'center')] ]
 
-	homeWindow = sg.Window('Pocket Sherpa v 0.1a', homeLayout, size=(600,400), grab_anywhere = True)
+	homeWindow = sg.Window('Pocket Sherpa v 0.1a', homeLayout, size=(400,300), grab_anywhere = True)
+
 
 	while True:
-	    eventHome, valuesHome = homeWindow.read()
+		eventHome, valuesHome = homeWindow.read()
 
-	    if eventHome is 'checklist':
-	    	#homeWindow.Hide()
+		if eventHome is 'checklist':
+			#homeWindow.Hide()
 
-	    	checklistLayout = [  
-	    		[sg.Text('14er Checklist', size = (200, 1), justification='center', font=("Arial Black", 30), text_color = 'white', pad=((0,0),20))],
-	    		[sg.Column(numComplete, justification = 'center')],
-	    		[sg.Column(ranges, justification = 'center')] ]
+			checklistLayout = [  
+				[sg.Text('14er Checklist', size = (200, 1), justification='center', font=("Arial Black", 30), text_color = 'white', pad=((0,0),20))],
+				[sg.Column(numComplete, justification = 'center')],
+				[sg.Column(ranges, justification = 'center')],
+				[sg.Column(editMtnList, justification = 'center')] ]
 
-	    	checklistWindow = sg.Window('Pocket Sherpa v 0.1a', checklistLayout, size=(600,400), grab_anywhere = True)
+			checklistWindow = sg.Window('Pocket Sherpa v 0.1a', checklistLayout, size=(600,420), grab_anywhere = True)
 
-	    	while True:
-	    		eventChecklist, valuesChecklist = checklistWindow.read()
-	    		if eventChecklist is 'ranges':
-	    			selectRange = valuesChecklist['ranges'][0]
-	    			currentRange = ''
+			while True:
+				eventChecklist, valuesChecklist = checklistWindow.read()
+				if eventChecklist is 'ranges':
+					selectRange = valuesChecklist['ranges'][0]
+					currentRange = ''
 
-	    			if(selectRange == 'Front Range'):
-	    				currentRange = front
-	    			elif(selectRange == 'Tenmile Range'):
-	    				currentRange = tenmile
-	    			elif(selectRange == 'Mosquito Range'):
-	    				currentRange = mosquito
-	    			elif(selectRange == 'Sawatch Range'):
-	    				currentRange = sawatch
-	    			elif(selectRange == 'Elk Mountains'):
-	    				currentRange = elk
-	    			elif(selectRange == 'San Juan Mountains'):
-	    				currentRange = sanJuan
-	    			elif(selectRange == 'Sangre de Cristo Mountains'):
-	    				currentRange = sangreDeCristo
+					if(selectRange == 'Front Range'):
+						currentRange = front
+					elif(selectRange == 'Tenmile Range'):
+						currentRange = tenmile
+					elif(selectRange == 'Mosquito Range'):
+						currentRange = mosquito
+					elif(selectRange == 'Sawatch Range'):
+						currentRange = sawatch
+					elif(selectRange == 'Elk Mountains'):
+						currentRange = elk
+					elif(selectRange == 'San Juan Mountains'):
+						currentRange = sanJuan
+					elif(selectRange == 'Sangre de Cristo Mountains'):
+						currentRange = sangreDeCristo
 
-	    			checklistWindow.FindElement('mountains').Update(currentRange)
+					checklistWindow.FindElement('addMtn').Update(visible = True)
+					checklistWindow.FindElement('removeMtn').Update(visible = True)
+					checklistWindow.FindElement('mountains').Update(values = currentRange)
 
-	    		if eventChecklist is 'mountains':
-	    			selectMountain = valuesChecklist['mountains'][0]
-	    			print(selectMountain)
+				if eventChecklist in ('addMtn', 'removeMtn'):
+					selectMountain = valuesChecklist['mountains'][0]
+					if (eventChecklist is 'addMtn') and (selectMountain not in mountainsCompleteList):
+						mountainsComplete += 1
+						mountainsCompleteList.append(selectMountain)
 
-	    		if eventChecklist in (None, 'exit'):
-	    			checklistWindow.close()
-	    			#homeWindow.UnHide()
-	    			break
+					elif (eventChecklist is 'removeMtn') and (selectMountain in mountainsCompleteList):
+						mountainsComplete -= 1
+						mountainsCompleteList.remove(selectMountain)
 
-	    if eventHome in (None, 'exit'):
-	        break
+					if mountainsComplete < 0:
+						mountainsComplete = 0
+
+					mountainsCompleteStr = str(mountainsComplete) + ' of 58'
+					checklistWindow.FindElement('numComplete').Update(mountainsCompleteStr)
+					print(mountainsCompleteList)
+
+				if eventChecklist in (None, 'exit'):
+					checklistWindow.close()
+					#homeWindow.UnHide()
+					break
+
+		if eventHome in (None, 'exit'):
+			break
 
 	homeWindow.close()
 
