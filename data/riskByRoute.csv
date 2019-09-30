@@ -1,0 +1,145 @@
+Route,Exposure,Stability,Routefind,Commitment,TotalRisk
+Grays Peak: North Slopes,1,1,1,1,4
+Mt. Belford: Northwest Ridge,1,2,1,2,6
+Mt. Bierstadt: West Slopes,1,2,1,1,5
+Mt. Bross: East Slopes from Mineral Park,1,1,1,1,4
+"Mt. Bross: ""Dolly Varden Gully""",1,2,2,2,7
+Mt. Bross: East Slopes from Moose Creek,1,2,2,2,7
+Mt. Elbert: Northeast Ridge,1,1,1,1,4
+Mt. Elbert: East Ridge,1,1,1,1,4
+Mt. Elbert: Southeast Ridge,1,2,2,2,7
+Mt. Lincoln: East Slopes,1,2,1,1,5
+Mt. Sherman: South Slope,1,2,2,2,7
+Pikes Peak: East Slopes,1,1,1,2,5
+Pikes Peak: Northwest Slopes,1,2,1,2,6
+Quandary Peak: East Ridge,1,1,1,1,4
+San Luis Peak: Northeast Ridge,1,1,1,1,4
+San Luis Peak: South Ridge,1,2,2,1,6
+Torreys Peak: South Slopes,1,2,1,1,5
+Culebra Peak: Northwest Ridge,2,2,2,2,8
+Grays Peak: Grays and Torreys,2,2,1,2,7
+Grays Peak: South Ridge,2,2,2,2,8
+Grays Peak: Southwest Ridge,2,2,2,2,8
+Handies Peak: Southwest Slopes,2,1,1,1,5
+Handies Peak: East Slopes,2,2,1,2,7
+Handies Peak: West Slopes,2,2,3,2,9
+Humboldt Peak: West Ridge,2,2,2,1,7
+Humboldt Peak: East Ridge,2,2,3,2,9
+Humboldt Peak: Southeast Gully,2,2,3,2,9
+Huron Peak: Northwest Slopes,2,2,1,1,6
+Huron Peak: Southwest Slopes,2,2,3,2,9
+Huron Peak: North Ridge from Lulu Gulch,2,2,2,3,9
+La Plata Peak: Northwest Ridge,2,2,1,2,7
+La Plata Peak: Southwest Ridge,2,3,2,2,9
+Mt. Antero: West Slopes,2,2,1,2,7
+Mt. Belford: Northwest Gully,2,3,2,2,9
+Mt. Bross: West Slopes,2,2,1,1,6
+Mt. Bross: Democrat-Cameron-Lincoln-Bross,2,2,1,2,7
+"Mt. Bross: ""S Gully""",2,2,2,2,8
+Mt. Cameron: West Ridge,2,2,1,1,6
+Mt. Columbia: West Slopes,2,3,2,2,9
+Mt. Columbia: Southeast Ridge,2,2,3,2,9
+Mt. Columbia: Southwest Couloir,2,2,3,2,9
+Mt. Democrat: East Slope,2,2,1,1,6
+Mt. Evans: West Ridge from Summit Lake,2,2,2,2,8
+Mt. Evans: West Ridge from Echo Lake,2,2,2,3,9
+Mt. Evans: West Ridge from Guanella Pass,2,3,3,3,11
+Mt. Harvard: South Slopes,2,2,1,2,7
+Mt. Harvard: South Face,2,2,2,2,8
+Mt. Harvard: Harvard and Columbia Traverse,2,4,4,4,14
+Mt. Lincoln: West Ridge,2,2,1,1,6
+Mt. Lincoln: Lincoln Amphitheatre,2,3,2,2,9
+Mt. Lindsey: North Couloir,2,2,3,3,10
+Mt. Massive: East Slopes,2,2,2,2,8
+Mt. Massive: Southwest Slopes,2,2,1,2,7
+Mt. Massive: East Ridge,2,2,3,3,10
+Mt. of the Holy Cross: North Ridge,2,2,2,3,9
+Mt. Oxford: Via Mt. Belford,2,2,1,3,8
+Mt. Princeton: East Slopes,2,2,1,2,7
+Mt. Shavano: East Slopes,2,2,1,2,7
+Mt. Shavano: Angel of Shavano,2,2,3,2,9
+Mt. Sherman: Southwest Ridge,2,2,1,1,6
+Mt. Sherman: West Slopes from Iowa Gulch,2,2,1,1,6
+Mt. Yale: Southwest Slopes,2,2,1,2,7
+Mt. Yale: East Ridge,2,3,3,3,11
+Quandary Peak: South Gully aka Cristo Couloir,2,3,2,1,8
+Redcloud Peak: Northeast Ridge,2,2,1,1,6
+Sunshine Peak: Via Redcloud Peak,2,2,1,3,8
+Sunshine Peak: Northwest Face,2,4,3,2,11
+Sunshine Peak: East Ridge,2,3,3,2,10
+Tabeguache Peak: Via Mt. Shavano,2,2,2,3,9
+Tabeguache Peak: West Ridge,2,3,3,3,11
+Torreys Peak: West Ridge,2,2,2,3,9
+Torreys Peak: NW Face/Tuning Fork,2,3,3,3,11
+Uncompahgre Peak: South Ridge,2,3,2,2,9
+Blanca Peak: Northwest Ridge,3,3,2,2,10
+Blanca Peak: Blanca and Ellingwood,3,3,3,3,12
+Castle Peak: Northeast Ridge,3,3,3,3,12
+Castle Peak: Castle and Conundrum,3,3,3,3,12
+Castle Peak: Northwest Ridge,3,3,2,2,10
+Castle Peak: North Face Couloir,3,3,2,2,10
+Challenger Point: North Slope,3,3,3,2,11
+Challenger Point: Kirk Couloir,3,2,3,3,11
+Conundrum Peak: South Ridge,3,3,2,2,10
+El Diente Peak: North Slopes,3,3,4,3,13
+El Diente Peak: South Slopes,3,3,4,3,13
+Ellingwood Point: South Face,3,3,3,2,11
+Ellingwood Point: North Ridge via South Zapata Creek,3,4,4,4,15
+Grays Peak: Lost Rat Couloir,3,3,2,3,11
+Kit Carson Peak: Via Challenger Point,3,3,3,3,12
+Kit Carson Peak: Outward Bound Couloir,3,2,3,3,11
+La Plata Peak: North Face,3,3,4,3,13
+Missouri Mountain: Northwest Ridge,3,3,1,2,9
+Missouri Mountain: West Ridge,3,3,2,2,10
+Missouri Mountain: North Face Couloirs,3,2,3,3,11
+Mt. Bierstadt: Bierstadt-Sawtooth-Evans,3,3,3,4,13
+Mt. Bierstadt: East Ridge,3,3,3,3,12
+Mt. Democrat: South Slope,3,2,3,2,10
+Mt. Elbert: Box Creek Couloirs,3,3,2,3,11
+Mt. Evans: North Face Moderate,3,3,1,2,9
+Mt. Lindsey: Northwest Gully,3,3,3,2,11
+Mt. of the Holy Cross: Cross Couloir,3,3,3,4,13
+Mt. of the Holy Cross: Halo Ridge,3,3,3,4,13
+Mt. Sneffels: South Slopes,3,3,2,2,10
+Mt. Sneffels: Southwest Ridge,3,3,3,3,12
+North Eolus: South Ridge,3,2,2,2,9
+Quandary Peak: North Gully aka Quandary Couloir,3,3,2,3,11
+Torreys Peak: Emperor Couloir,3,3,3,3,12
+Torreys Peak: Dead Dog Couloir,3,3,2,3,11
+Windom Peak: West Ridge,3,3,2,2,10
+Capitol Peak: Northeast Ridge,4,4,4,5,17
+Conundrum Peak: Conundrum Couloir,4,3,2,3,12
+Crestone Needle: South Face,4,3,4,3,14
+Crestone Peak: South Face,4,3,3,3,13
+Ellingwood Point: Southwest Ridge,4,4,3,3,14
+Kit Carson Peak: East Ridge,4,3,4,4,15
+Kit Carson Peak: North Ridge,4,3,3,4,14
+La Plata Peak: Ellingwood Ridge,4,4,4,4,16
+Little Bear Peak: West Ridge and Southwest Face,4,5,4,4,17
+Longs Peak: Keyhole Route,4,3,3,4,14
+Longs Peak: Loft Route,4,3,4,4,15
+Longs Peak: Keplinger's Couloir,4,3,3,3,13
+Maroon Peak: South Ridge,4,4,5,5,18
+Maroon Peak: Bell Cord Couloir,4,4,4,4,16
+Mt. Eolus: Northeast Ridge,4,3,3,3,13
+Mt. Evans: West Gully,4,4,2,2,12
+Mt. Evans: North Face Steep,4,3,3,3,13
+Mt. Lindsey: Northwest Ridge,4,2,3,3,12
+Mt. Wilson: North Slopes,4,3,4,3,14
+Mt. Wilson: Mt. Wilson and El Diente Traverse,4,4,4,4,16
+Mt. Wilson: Southwest Slopes,4,3,3,3,13
+Mt. Wilson: East Face,4,3,4,4,15
+North Maroon Peak: Northeast Ridge,4,4,4,4,16
+Pyramid Peak: Northeast Ridge,4,4,4,4,16
+Quandary Peak: West Ridge,4,3,3,4,14
+Snowmass Mountain: East Slopes,4,3,3,4,14
+Snowmass Mountain: West Slope,4,4,4,4,16
+Torreys Peak: Kelso Ridge,4,4,3,3,14
+Wetterhorn Peak: Southeast Ridge,4,3,3,3,13
+Wetterhorn Peak: East Face,4,3,3,3,13
+Wilson Peak: Southwest Ridge,4,3,3,3,13
+Crestone Needle: Ellingwood Arete/Ledges,5,4,4,5,18
+Crestone Peak: Crestones Traverse,5,3,4,4,16
+El Diente Peak: North Buttress,5,3,4,4,16
+Maroon Peak: Bells Traverse,5,4,5,5,19
+Sunlight Peak: South Face,5,3,3,3,14
