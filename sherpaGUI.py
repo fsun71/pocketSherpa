@@ -18,13 +18,17 @@ sanJuan = ['Uncompahgre Peak', 'Mt. Wilson', 'El Diente Peak', 'Mt. Sneffels', '
 sangreDeCristo = ['Blanca Peak', 'Crestone Peak', 'Crestone Needle','Kit Carson Peak', 'Challenger Point', 'Humboldt Peak', 'Culebra Peak', 'Ellingwood Point', 'Mt. Lindsey', 'Little Bear Peak']
 sawatch = ['Mt. Elbert', 'Mt. Massive', 'Mt. Harvard', 'La Plata Peak', 'Mt. Antero', 'Mt. Shavano', 'Mt. Princeton', 'Mt. Belford', 'Mt. Yale', 'Tabeguache Peak', 'Mt. Oxford', 'Mt. Columbia', 'Missouri Mountain', 'Mt. of the Holy Cross', 'Huron Peak']
 
-def suggestMountain(riskCoeff, populationCoeff, geospatialCoeff, maxAccessibility, maxTravelTime, numSuggest = 1):
+def suggestMountain(riskCoeff, populationCoeff, geospatialCoeff, maxAccessibility, maxTravelTime, numSuggest = 1, excludeWinterRoutes = True):
 	#Perhaps introduce some sort of quadrative/bell curveish stuff idk
 	filterMatrix = [maxAccessibility, maxTravelTime]
 	coeffMatrix = [riskCoeff, populationCoeff, geospatialCoeff]
 	utility = 0
 
 	peakDataFiltered = peakData.loc[((peakData['accessibilityQuotient'] * 6) <= filterMatrix[0]) & ((peakData['Driving Time'] / 3600) <= filterMatrix[1])]
+
+	if (excludeWinterRoutes == True):
+		peakDataFiltered = peakDataFiltered[~peakDataFiltered.Route.str.contains("Couloir")]
+
 	peakDataFilteredMatrix = peakDataFiltered[['riskQuotient', 'populationQuotient', 'geospatialQuotient']]
 
 	for i in range(3):
@@ -48,7 +52,7 @@ def suggestMountain(riskCoeff, populationCoeff, geospatialCoeff, maxAccessibilit
 	return routeUtilitySorted[-numSuggest:][0].to_string(index = False)
 
 def launchGUI():
-	backgroundColor = '#4266a1'
+	backgroundColor = '#1c568c'
 	sg.SetOptions(background_color = backgroundColor, element_background_color = backgroundColor)
 
 	mountainsCompleteList = []
@@ -77,7 +81,7 @@ def launchGUI():
 	mountainsComplete = len(mountainsCompleteList)
 	mountainsCompleteStr = str(mountainsComplete) + ' of 58'
 
-	suggestCol = [[sg.Button('Suggest a 14er for me', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'suggest')]]
+	suggestCol = [[sg.Button('Suggest a 14er for me', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'suggestMtn')]]
 	checklistCol = [[sg.Button('14er Checklist', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'checklist')]]
 	coeffCol = [[sg.Button('Mountain Preferences', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'setCoeff')]]
 	exitCol = [[sg.Button('Exit', button_color = ('white', backgroundColor), font=("Arial Black", 12), border_width= 0, key = 'exit')]]
@@ -108,23 +112,25 @@ def launchGUI():
 					[sg.Text(populationText, justification='left', font=("Arial Black", 13), text_color = 'white', key = 'populationText', enable_events = True, size = (20, 1))],
 					[sg.Text(geospatialText, justification='left', font=("Arial Black", 13), text_color = 'white', key = 'geospatialText', enable_events = True, size = (20, 1))],
 					[sg.Text(accessibilityText, justification='left', font=("Arial Black", 13), text_color = 'white', key = 'accessibilityText', enable_events = True, size = (20, 1))],
-					[sg.Text(maxTravelTimeText, justification='left', font=("Arial Black", 13), text_color = 'white', key = 'maxTravelTimeText', enable_events = True, size = (20, 1))]]
+					[sg.Text(maxTravelTimeText, justification='left', font=("Arial Black", 13), text_color = 'white', key = 'maxTravelTimeText', enable_events = True, size = (20, 1))],
+					[sg.Text('Include Snow Routes', justification='left', font=("Arial Black", 13), text_color = 'white', key = 'snowRouteText', enable_events = True, size = (20, 1))]]
 
 	coeffSliderCol = [[sg.Slider(range = (-3, 3), key = 'riskCoeff', default_value = preferencesArray[0], disable_number_display = True, orientation = 'horizontal', enable_events = True, pad = ((0, 0), (6, 6)))], 
 					[sg.Slider(range = (-3, 3), key = 'populationCoeff', default_value = preferencesArray[1], disable_number_display = True, orientation = 'horizontal', enable_events = True, pad = ((0, 0), (6, 6)))], 
 					[sg.Slider(range = (-3, 3), key = 'geospatialCoeff', default_value = preferencesArray[2], disable_number_display = True, orientation = 'horizontal', enable_events = True, pad = ((0, 0), (6, 6)))], 
 					[sg.Slider(range = (1, 6), key = 'maxAccessibility', default_value = preferencesArray[3], disable_number_display = True, orientation = 'horizontal', enable_events = True, pad = ((0, 0), (6, 6)))],
-					[sg.Slider(range = (2, 8), key = 'maxTravelTime', default_value = preferencesArray[4], resolution = 0.2, disable_number_display = True, orientation = 'horizontal', enable_events = True, pad = ((0, 0), (6, 6)))]]
+					[sg.Slider(range = (2, 8), key = 'maxTravelTime', default_value = preferencesArray[4], resolution = 0.2, disable_number_display = True, orientation = 'horizontal', enable_events = True, pad = ((0, 0), (6, 6)))],
+					[sg.Checkbox('', key = 'snowRouteBool', default = False, size = (200, 1))]]
 
 	homeLayout = [[sg.Text('Pocket Sherpa', size = (200, 1), justification='center', font=("Arial Black", 30), text_color = 'white', pad=((0,0),20))],
-				[sg.Column(suggestCol, justification = 'center', element_justification = 'center', pad=((0,0),(40, 0)))],
+				[sg.Column(suggestCol, justification = 'center', element_justification = 'center', pad=((0,0),(20, 0)))],
 				[sg.Column(checklistCol, justification = 'center', element_justification = 'center')],
 				[sg.Column(coeffCol, justification = 'center', element_justification = 'center')],
 				[sg.Column(exitCol, justification = 'center', element_justification = 'center')]]
 
-	coeffUpdateBtn = [[sg.Button('Force reload', size = (16, 1), key = 'updateCoeff')]]
+	coeffUpdateBtn = [[sg.Button('Save settings', size = (16, 1), key = 'updateCoeff')]]
 
-	homeWindow = sg.Window('Pocket Sherpa v 0.1a', homeLayout, size=(400,350))
+	homeWindow = sg.Window('Pocket Sherpa v 1.0 beta', homeLayout, size=(350,350))
 
 
 	while True:
@@ -139,7 +145,7 @@ def launchGUI():
 				[sg.Column(ranges, justification = 'center')],
 				[sg.Column(editMtnList, justification = 'center')] ]
 
-			checklistWindow = sg.Window('Pocket Sherpa v 0.1a', checklistLayout, size=(600,420))
+			checklistWindow = sg.Window('Pocket Sherpa v 1.0 beta', checklistLayout, size=(600,420))
 
 			while True:
 				eventChecklist, valuesChecklist = checklistWindow.read()
@@ -211,17 +217,17 @@ def launchGUI():
 						[sg.Frame(title = '', layout = coeffTextCol, element_justification = 'left', border_width = 0, size = (200,300)), sg.Frame(title = '', layout = coeffSliderCol, element_justification = 'center', border_width = 0, size = (400,300))],
 						[sg.Column(coeffUpdateBtn, justification = 'center', element_justification = 'center')]]
 
-			coeffWindow = sg.Window('Pocket Sherpa v 0.1a', coeffLayout, size=(600,350))
+			coeffWindow = sg.Window('Pocket Sherpa v 1.0 beta', coeffLayout, size=(600,350))
 			
 
 			while True:
 				eventCoeff, valuesCoeff = coeffWindow.read()
 
-				coeffLabels = ['riskCoeff', 'populationCoeff', 'geospatialCoeff', 'maxAccessibility', 'maxTravelTime']
+				coeffLabels = ['riskCoeff', 'populationCoeff', 'geospatialCoeff', 'maxAccessibility', 'maxTravelTime', 'snowRouteBool']
 				coeffTextLabels = ['riskText', 'populationText', 'geospatialText', 'accessibilityText', 'maxTravelTimeText']
 
 				if eventCoeff is 'updateCoeff':
-					for i in range(5):
+					for i in range(5): 
 						coeffWindow.FindElement(coeffLabels[i]).Update(preferencesArray[i])
 
 					for i in range(3):
@@ -232,7 +238,9 @@ def launchGUI():
 
 				if eventCoeff in coeffLabels:
 
-					coeffMatrix = [valuesCoeff['riskCoeff'], valuesCoeff['populationCoeff'], valuesCoeff['geospatialCoeff'], valuesCoeff['maxAccessibility'], valuesCoeff['maxTravelTime']]
+					coeffMatrix = [valuesCoeff['riskCoeff'], valuesCoeff['populationCoeff'], valuesCoeff['geospatialCoeff'], valuesCoeff['maxAccessibility'], valuesCoeff['maxTravelTime'], valuesCoeff['snowRouteBool']]
+
+					toggleSnowRoute = valuesCoeff['snowRouteBool']
 
 					for i in range(7):
 						if coeffMatrix[0] == i-3:
@@ -257,9 +265,7 @@ def launchGUI():
 					maxTravelTimeText = coeffMatrix[4]
 					coeffWindow.FindElement('maxTravelTimeText').Update(str(maxTravelTimeText) + ' hours')
 
-					#print(suggestMountain(coeffMatrix[0], coeffMatrix[1], coeffMatrix[2], coeffMatrix[3], coeffMatrix[4]))
 					preferencesArray = coeffMatrix
-					print(preferencesArray)				
 
 					with open('data/userPreferences.csv', 'w') as preferencesCSV:
 						for i in coeffMatrix:
@@ -268,8 +274,27 @@ def launchGUI():
 				if eventCoeff in (None, 'exit'):
 					homeWindow.UnHide()
 					coeffWindow.close()
-					homeWindow.UnHide()
 					break
+
+		if eventHome is 'suggestMtn':
+			homeWindow.Hide()
+			formattedPreferencesArray = [int(float(preferencesArray[0])), int(float(preferencesArray[1])), int(float(preferencesArray[2])), int(float(preferencesArray[3])), float(preferencesArray[4]), 1, bool(preferencesArray[5])]
+
+			suggestedMtn = suggestMountain(formattedPreferencesArray[0], formattedPreferencesArray[1], formattedPreferencesArray[2], formattedPreferencesArray[3], formattedPreferencesArray[4], formattedPreferencesArray[5], formattedPreferencesArray[6])
+
+			suggestLayout = [[sg.Text('Suggested Route:', size = (200, 1), justification='center', font=("Arial Black", 25), text_color = 'white', pad=((0,0), 20))],
+							[sg.Text(suggestedMtn, size = (200, 1), justification='center', font=("Arial Black", 16), text_color = 'white', pad=((0,0), 20))]]
+
+			suggestWindow = sg.Window('Pocket Sherpa v 1.0 beta', suggestLayout, size=(500,200))
+
+			while True:
+				eventSuggest, valuesSuggest = suggestWindow.read()
+
+				if eventSuggest in (None, 'exit'):
+					homeWindow.UnHide()
+					suggestWindow.Close()
+					break
+
 
 		if eventHome in (None, 'exit'):
 			break
