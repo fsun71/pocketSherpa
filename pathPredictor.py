@@ -88,6 +88,10 @@ def processData():
 	# plt.xlim(x_range)
 	# plt.ylim(y_range)
 
+	plt.title('Grays and Torreys 3D Topographic Map')
+	ax.set_xlabel('Degrees longitude')
+	ax.set_ylabel('Degrees lattitude')
+	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
 
 processData()
