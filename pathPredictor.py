@@ -94,4 +94,34 @@ def processData():
 	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
 
-processData()
+def aStarSearch():
+	nodeMatrix = []
+	resolution = 4
+
+	for i in range(resolution):
+		nodeRow = []
+		for j in range(resolution):
+			nodeRow.append(i*resolution + (j+1))
+		nodeMatrix.append(nodeRow)
+
+	for i in nodeMatrix:
+		print(i)
+
+	for row in range(resolution):
+		for column in range(resolution):
+
+			right = nodeMatrix[row][column+1]
+			left = nodeMatrix[row][column-1]
+
+			if (row-1 < 0 and column-1 < 0):
+				print([right, nodeMatrix[row+1][column+1], nodeMatrix[row+1][column]])
+			elif (row-1 < 0 and column+1 < resolution):
+				print([right, nodeMatrix[row+1][column+1], nodeMatrix[row+1][column], nodeMatrix[row+1][column-1], nodeMatrix[row][column-1]])
+			elif(row-1 < 0 and column+1 == resolution):
+				print([left, nodeMatrix[row+1][column-1], nodeMatrix[row+1][column]])
+			elif(column-1 < 0):
+				print([nodeMatrix[row-1][column], nodeMatrix[row-1][column+1], nodeMatrix[row][column+1], nodeMatrix[row+1][column+1], nodeMatrix[row+1][column]])
+			else:
+				print([nodeMatrix[row-1][column-1], nodeMatrix[row-1][column], nodeMatrix[row-1][column+1], nodeMatrix[row][column-1], nodeMatrix[row][column+1], nodeMatrix[row+1][column-1], nodeMatrix[row+1][column], nodeMatrix[row+1][column+1]])
+
+aStarSearch()
