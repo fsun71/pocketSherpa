@@ -81,7 +81,7 @@ def processData():
 	fig = plt.figure()
 	ax = plt.axes(projection = '3d')
 
-	ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='viridis', edgecolor='none')
+	ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='gist_earth', edgecolor='none')
 	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
 	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
 
