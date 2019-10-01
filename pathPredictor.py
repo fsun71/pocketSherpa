@@ -6,16 +6,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
+resolution = 50
+
 def getXYZData():
-	upperLeftCornerLat = 39.67
-	upperLeftCornerLong = -105.825
+	# upperLeftCornerLat = 39.67
+	# upperLeftCornerLong = -105.825
+	# bottomRightCornerLat = 39.61
+	# bottomRightCornerLong = -105.775
+
+	upperLeftCornerLat = 39.645
+	upperLeftCornerLong = -105.834
 	bottomRightCornerLat = 39.63
-	bottomRightCornerLong = -105.785
+	bottomRightCornerLong = -105.8
 
 	latRange = abs(upperLeftCornerLat - bottomRightCornerLat)
 	longRange = abs(upperLeftCornerLong - bottomRightCornerLong)
 
-	resolution = 25
 	latRes = latRange / resolution
 	longRes = longRange / resolution
 
@@ -55,22 +61,23 @@ def getXYZData():
 	xyzDF = pd.DataFrame(xyzArray, columns = ['lattitude', 'longitude', 'elevation'])
 	xyzCSV = xyzDF.to_csv('data/graystorreysXYZ.csv')
 
+xyzDF = pd.read_csv('data/graystorreysXYZ.csv')
+
 def processData():
-	xyzDF = pd.read_csv('data/graystorreysXYZ.csv')
 	xyzDF['elevationFt'] = np.round(xyzDF['elevation'] * 3.28084, 6)
 
 	xDataArray = []
 	yDataArray = []
 	zDataArray = []
 
-	for i in range(25):
+	for i in range(resolution):
 		tempContainerX = []
 		tempContainerY = []
 		tempContainerZ = []
-		for j in range(25):
-			tempContainerX.append(xyzDF['longitude'][(i*25)+j])
-			tempContainerY.append(xyzDF['lattitude'][(i*25)+j])
-			tempContainerZ.append(xyzDF['elevationFt'][(i*25)+j])
+		for j in range(resolution):
+			tempContainerX.append(xyzDF['longitude'][(i*resolution)+j])
+			tempContainerY.append(xyzDF['lattitude'][(i*resolution)+j])
+			tempContainerZ.append(xyzDF['elevationFt'][(i*resolution)+j])
 
 		xDataArray.append(tempContainerX)
 		yDataArray.append(tempContainerY)
@@ -81,7 +88,7 @@ def processData():
 	fig = plt.figure()
 	ax = plt.axes(projection = '3d')
 
-	ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='gist_earth', edgecolor='none')
+	ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgecolor='none')
 	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
 	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
 
@@ -94,9 +101,20 @@ def processData():
 	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
 
-def aStarSearch():
+def generateNodeElevationDict():
+	elevationArray = np.array(xyzDF['elevation'])
+
+	nodeElevationValuesDict = {}
+
+	for i in range(2500):
+		nodeElevationValuesDict.update({i+1 : elevationArray[i]})
+
+	return nodeElevationValuesDict
+
+def nodeGraphGeneration(resolution):
 	nodeMatrix = []
-	resolution = 4
+
+	nodeElevationDict = generateNodeElevationDict()
 
 	for i in range(resolution):
 		nodeRow = []
@@ -104,24 +122,85 @@ def aStarSearch():
 			nodeRow.append(i*resolution + (j+1))
 		nodeMatrix.append(nodeRow)
 
+
+	boundedNodeMatrix =  [np.zeros(resolution + 2, dtype = int)]
+
 	for i in nodeMatrix:
-		print(i)
+		i = np.insert(i, 0, 0)
+		i = np.insert(i, resolution + 1, 0)
+		boundedNodeMatrix.append(i)
 
-	for row in range(resolution):
-		for column in range(resolution):
+	boundedNodeMatrix.append(np.zeros(resolution + 2, dtype = int))
+	adjacentNodeDict = {}
 
-			right = nodeMatrix[row][column+1]
-			left = nodeMatrix[row][column-1]
+	for row in range(1, resolution+1):
+		for column in range(1, resolution+1):
+			adjacentNodeMatrix = [boundedNodeMatrix[row-1][column], boundedNodeMatrix[row-1][column+1], boundedNodeMatrix[row][column+1], boundedNodeMatrix[row+1][column+1], boundedNodeMatrix[row+1][column], boundedNodeMatrix[row+1][column-1], boundedNodeMatrix[row][column-1], boundedNodeMatrix[row-1][column-1]]
+			adjacentNodeMatrix = np.sort(adjacentNodeMatrix, kind = 'mergesort')
+			adjacentNodeMatrix = np.trim_zeros(adjacentNodeMatrix)
 
-			if (row-1 < 0 and column-1 < 0):
-				print([right, nodeMatrix[row+1][column+1], nodeMatrix[row+1][column]])
-			elif (row-1 < 0 and column+1 < resolution):
-				print([right, nodeMatrix[row+1][column+1], nodeMatrix[row+1][column], nodeMatrix[row+1][column-1], nodeMatrix[row][column-1]])
-			elif(row-1 < 0 and column+1 == resolution):
-				print([left, nodeMatrix[row+1][column-1], nodeMatrix[row+1][column]])
-			elif(column-1 < 0):
-				print([nodeMatrix[row-1][column], nodeMatrix[row-1][column+1], nodeMatrix[row][column+1], nodeMatrix[row+1][column+1], nodeMatrix[row+1][column]])
-			else:
-				print([nodeMatrix[row-1][column-1], nodeMatrix[row-1][column], nodeMatrix[row-1][column+1], nodeMatrix[row][column-1], nodeMatrix[row][column+1], nodeMatrix[row+1][column-1], nodeMatrix[row+1][column], nodeMatrix[row+1][column+1]])
 
-aStarSearch()
+
+			adjacentNodeDistanceDict = {}
+
+			for i in adjacentNodeMatrix:
+				adjacentNodeElevation = nodeElevationDict[i]
+				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
+				adjacentNodeDistanceDict.update({i : (adjacentNodeElevation - currentNodeElevation + 180)})
+
+			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
+
+	nodeGraph = adjacentNodeDict
+	return nodeGraph
+
+def dijkstra(graph, srcIndex, destIndex):
+	inf = float('inf')
+	source = (srcIndex + 1)
+	dest =  destIndex + 1
+
+	visitedNodes = {}
+	unvisitedNodes = {}
+
+	nodes = np.array(range(1, resolution**2 +1))
+	for node in nodes:
+		defaultDist = inf
+		if node == source:
+			defaultDist = 0
+		unvisitedNodes.update({node : defaultDist})
+
+	currentNode = source
+	currentDistance = 0
+
+	while True:
+	    for neighbour, distance in graph[currentNode].items():
+	        if neighbour not in unvisitedNodes: continue
+	        newDistance = currentDistance + distance
+	        if unvisitedNodes[neighbour] is None or unvisitedNodes[neighbour] > newDistance:
+	            unvisitedNodes[neighbour] = newDistance
+	    visitedNodes[currentNode] = currentDistance
+	    del unvisitedNodes[currentNode]
+	    if not unvisitedNodes: break
+	    candidates = [node for node in unvisitedNodes.items() if node[1]]
+	    currentNode, currentDistance = sorted(candidates, key = lambda x: x[1])[0]		
+	    if currentNode == destIndex:
+	    	break
+
+	print(visitedNodes[dest])
+
+# Used to get the 180 figure in the nodeGraphGeneration function
+# function now deprecated
+# def getMostNegative():
+# 	distMatrix = nodeGraphGeneration(resolution)
+
+# 	minKeys = []
+# 	for i in range(1, 2501):
+# 		tempContainer = []
+# 		for j in distMatrix[i].values():
+# 			tempContainer.append(j)
+# 		minKeys.append(min(tempContainer))
+	
+# 	mostNegative = min(np.round(minKeys, -1))
+
+# 	return -1 * mostNegative
+
+dijkstra(nodeGraphGeneration(resolution), 2437, xyzDF['elevation'].idxmax())
