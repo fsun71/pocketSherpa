@@ -68,7 +68,7 @@ def generateNodeElevationDict():
 
 	nodeElevationValuesDict = {}
 
-	for i in range(2500):
+	for i in range(resolution**2):
 		nodeElevationValuesDict.update({i+1 : elevationArray[i]})
 
 	return nodeElevationValuesDict
@@ -107,8 +107,7 @@ def nodeGraphGeneration(resolution):
 				adjacentNodeElevation = nodeElevationDict[i]
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
 
-				#Makes everything non negative
-				adjacentNodeDistanceDict.update({i : (adjacentNodeElevation - currentNodeElevation + 9999)})
+				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation)**2})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
@@ -249,13 +248,14 @@ def renderVisualData():
 	ax.scatter(pathX, pathY, pathZ, alpha = 0)
 	ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
 
-	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = '#28d918', linewidth = 2)
+	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = 'red', linewidth = 3)
 	ax.add_line(line)
 
-	ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1, cmap='gist_earth', edgecolor='black', alpha = 0.5)
+	surfacePlot = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='gist_earth', edgecolor='gray')
 	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
 	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
 
+	fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
 	plt.title('Grays and Torreys 3D Topographic Map')
 	ax.set_xlabel('Degrees longitude')
 	ax.set_ylabel('Degrees lattitude')
