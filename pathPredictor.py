@@ -63,53 +63,6 @@ def getXYZData():
 
 xyzDF = pd.read_csv('data/graystorreysXYZ.csv')
 
-def processData():
-	xyzDF['elevationFt'] = np.round(xyzDF['elevation'] * 3.28084, 6)
-
-	xDataArray = []
-	yDataArray = []
-	zDataArray = []
-
-	for i in range(resolution):
-		tempContainerX = []
-		tempContainerY = []
-		tempContainerZ = []
-		for j in range(resolution):
-			tempContainerX.append(xyzDF['longitude'][(i*resolution)+j])
-			tempContainerY.append(xyzDF['lattitude'][(i*resolution)+j])
-			tempContainerZ.append(xyzDF['elevationFt'][(i*resolution)+j])
-
-		xDataArray.append(tempContainerX)
-		yDataArray.append(tempContainerY)
-		zDataArray.append(tempContainerZ)
-
-	X, Y, Z = np.array(xDataArray), np.array(yDataArray), np.array(zDataArray)
-	
-	fig = plt.figure()
-	ax = plt.axes(projection = '3d')
-
-	pathXYZ = plotOptimalRoute(2437, xyzDF['elevation'].idxmax())
-	pathX = pathXYZ[0]
-	pathY = pathXYZ[1]
-	pathZ = pathXYZ[2]
-
-	ax.scatter(pathX, pathY, pathZ, alpha = 0)
-	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = '#28d918', linewidth = 2)
-	ax.add_line(line)
-
-	ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgecolor='black')
-	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
-	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
-
-	# plt.xlim(x_range)
-	# plt.ylim(y_range)
-
-	plt.title('Grays and Torreys 3D Topographic Map')
-	ax.set_xlabel('Degrees longitude')
-	ax.set_ylabel('Degrees lattitude')
-	ax.set_zlabel('Elevation ASL (feet)')
-	plt.show()
-
 def generateNodeElevationDict():
 	elevationArray = np.array(xyzDF['elevation'])
 
@@ -242,21 +195,71 @@ def dijkstra(nodeMap, srcIndex, destIndex):
 def plotOptimalRoute(origin, destination):
 	pathToDest = dijkstra(nodeGraphGeneration(resolution), origin, destination)
 
-	lattitudePathArray = []
 	longitudePathArray = [] 
+	lattitudePathArray = []
 	elevationPathArray = []
 
 	for i in pathToDest:
-		lattitudePathArray.append(xyzDF.iloc[i-1]['lattitude'])
 		longitudePathArray.append(xyzDF.iloc[i-1]['longitude'])
+		lattitudePathArray.append(xyzDF.iloc[i-1]['lattitude'])
 		elevationPathArray.append(xyzDF.iloc[i-1]['elevationFt'])
 
+	originDestX = [xyzDF.iloc[origin]['longitude'], xyzDF.iloc[destination]['longitude']]
+	originDestY = [xyzDF.iloc[origin]['lattitude'], xyzDF.iloc[destination]['lattitude']]
+	originDestZ = [xyzDF.iloc[origin]['elevationFt'], xyzDF.iloc[destination]['elevationFt']]
+
 	X, Y, Z = longitudePathArray, lattitudePathArray, elevationPathArray
-	return [X, Y, Z]
+	return [X, Y, Z, originDestX, originDestY, originDestZ]
 
-	#return ax.scatter(X, Y, Z)
+def renderVisualData():
+	xyzDF['elevationFt'] = np.round(xyzDF['elevation'] * 3.28084, 6)
 
-processData()
+	xDataArray = []
+	yDataArray = []
+	zDataArray = []
 
+	for i in range(resolution):
+		tempContainerX = []
+		tempContainerY = []
+		tempContainerZ = []
+		for j in range(resolution):
+			tempContainerX.append(xyzDF['longitude'][(i*resolution)+j])
+			tempContainerY.append(xyzDF['lattitude'][(i*resolution)+j])
+			tempContainerZ.append(xyzDF['elevationFt'][(i*resolution)+j])
 
-#plotOptimalRoute(2437, xyzDF['elevation'].idxmax())
+		xDataArray.append(tempContainerX)
+		yDataArray.append(tempContainerY)
+		zDataArray.append(tempContainerZ)
+
+	X, Y, Z = np.array(xDataArray), np.array(yDataArray), np.array(zDataArray)
+	
+	fig = plt.figure()
+	ax = plt.axes(projection = '3d')
+
+	pathXYZ = plotOptimalRoute(2437, xyzDF['elevation'].idxmax())
+
+	pathX = pathXYZ[0]
+	pathY = pathXYZ[1]
+	pathZ = pathXYZ[2]
+
+	originDestX = pathXYZ[3]
+	originDestY = pathXYZ[4]
+	originDestZ = pathXYZ[5]
+
+	ax.scatter(pathX, pathY, pathZ, alpha = 0)
+	ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
+
+	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = '#28d918', linewidth = 2)
+	ax.add_line(line)
+
+	ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1, cmap='gist_earth', edgecolor='black', alpha = 0.5)
+	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
+	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
+
+	plt.title('Grays and Torreys 3D Topographic Map')
+	ax.set_xlabel('Degrees longitude')
+	ax.set_ylabel('Degrees lattitude')
+	ax.set_zlabel('Elevation ASL (feet)')
+	plt.show()
+
+renderVisualData()
