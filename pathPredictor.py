@@ -145,7 +145,7 @@ def nodeGraphGeneration(resolution):
 			for i in adjacentNodeMatrix:
 				adjacentNodeElevation = nodeElevationDict[i]
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
-				adjacentNodeDistanceDict.update({i : (adjacentNodeElevation - currentNodeElevation)})
+				adjacentNodeDistanceDict.update({i : (adjacentNodeElevation - currentNodeElevation + 200)})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
@@ -240,16 +240,16 @@ def plotOptimalRoute(origin, destination):
 	for i in pathToDest:
 		lattitudePathArray.append(xyzDF.iloc[i-1]['lattitude'])
 		longitudePathArray.append(xyzDF.iloc[i-1]['longitude'])
-		elevationPathArray.append(xyzDF.iloc[i-1]['elevation'])
+		elevationPathArray.append(xyzDF.iloc[i-1]['elevationFt'])
 
-	X, Y, Z = lattitudePathArray, longitudePathArray, elevationPathArray
+	X, Y, Z = longitudePathArray, lattitudePathArray, elevationPathArray
 	
 	fig = plt.figure()
 	ax = plt.axes(projection = '3d')
 
 	ax.scatter(X, Y, Z, alpha = 0)
 
-	line = mplot3d.art3d.Line3D(lattitudePathArray, longitudePathArray, elevationPathArray)
+	line = mplot3d.art3d.Line3D(longitudePathArray, lattitudePathArray, elevationPathArray)
 	return ax.add_line(line)
 	#return ax.scatter(X, Y, Z)
 
