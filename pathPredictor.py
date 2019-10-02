@@ -88,8 +88,16 @@ def processData():
 	fig = plt.figure()
 	ax = plt.axes(projection = '3d')
 
-	ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgecolor='none')
-	plotOptimalRoute(2437, xyzDF['elevation'].idxmax())
+	pathXYZ = plotOptimalRoute(2437, xyzDF['elevation'].idxmax())
+	pathX = pathXYZ[0]
+	pathY = pathXYZ[1]
+	pathZ = pathXYZ[2]
+
+	ax.scatter(pathX, pathY, pathZ, alpha = 0)
+	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = '#28d918', linewidth = 2)
+	ax.add_line(line)
+
+	ax.plot_wireframe(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgecolor='black')
 	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
 	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
 
@@ -145,7 +153,9 @@ def nodeGraphGeneration(resolution):
 			for i in adjacentNodeMatrix:
 				adjacentNodeElevation = nodeElevationDict[i]
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
-				adjacentNodeDistanceDict.update({i : (adjacentNodeElevation - currentNodeElevation + 200)})
+
+				#Makes everything non negative
+				adjacentNodeDistanceDict.update({i : (adjacentNodeElevation - currentNodeElevation + 9999)})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
@@ -198,7 +208,6 @@ def dijkstra(nodeMap, srcIndex, destIndex):
 	    visitedNodeMap[currentNode] = currentDistance
 	    del unvisitedNodeMap[currentNode]
 
-
 	    #Break once minimum distance is calculated and stored (see above two lines) for the destination node
 	    if currentNode == destIndex:
 	    	break
@@ -243,14 +252,8 @@ def plotOptimalRoute(origin, destination):
 		elevationPathArray.append(xyzDF.iloc[i-1]['elevationFt'])
 
 	X, Y, Z = longitudePathArray, lattitudePathArray, elevationPathArray
-	
-	fig = plt.figure()
-	ax = plt.axes(projection = '3d')
+	return [X, Y, Z]
 
-	ax.scatter(X, Y, Z, alpha = 0)
-
-	line = mplot3d.art3d.Line3D(longitudePathArray, lattitudePathArray, elevationPathArray)
-	return ax.add_line(line)
 	#return ax.scatter(X, Y, Z)
 
 processData()
