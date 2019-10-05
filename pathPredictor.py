@@ -7,17 +7,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 
 resolution = 50
+name = ''
+mapName = ''
 
-def getXYZData():
-	# upperLeftCornerLat = 39.67
-	# upperLeftCornerLong = -105.825
-	# bottomRightCornerLat = 39.61
-	# bottomRightCornerLong = -105.775
-
-	upperLeftCornerLat = 39.645
-	upperLeftCornerLong = -105.834
-	bottomRightCornerLat = 39.63
-	bottomRightCornerLong = -105.8
+def getXYZData(upperLeftCornerLat, upperLeftCornerLong, bottomRightCornerLat, bottomRightCornerLong):
 
 	latRange = abs(upperLeftCornerLat - bottomRightCornerLat)
 	longRange = abs(upperLeftCornerLong - bottomRightCornerLong)
@@ -59,9 +52,7 @@ def getXYZData():
 		xyzArray.append([coordinate[0], coordinate[1], elevation])
 
 	xyzDF = pd.DataFrame(xyzArray, columns = ['lattitude', 'longitude', 'elevation'])
-	xyzCSV = xyzDF.to_csv('data/graystorreysXYZ.csv')
-
-xyzDF = pd.read_csv('data/graystorreysXYZ.csv')
+	xyzCSV = xyzDF.to_csv('data/' + name + 'XYZ.csv')
 
 def generateNodeElevationDict():
 	elevationArray = np.array(xyzDF['elevation'])
@@ -235,7 +226,7 @@ def renderVisualData():
 	fig = plt.figure()
 	ax = plt.axes(projection = '3d')
 
-	pathXYZ = plotOptimalRoute(2437, xyzDF['elevation'].idxmax())
+	pathXYZ = plotOptimalRoute(2144, xyzDF['elevation'].idxmax())
 
 	pathX = pathXYZ[0]
 	pathY = pathXYZ[1]
@@ -250,16 +241,22 @@ def renderVisualData():
 	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = 'red', linewidth = 4)
 	ax.add_line(line)
 
-	surfacePlot = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='gist_earth', edgecolor='none', alpha = 0.5)
+	surfacePlot = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgecolor='none', alpha = 0.5)
 	ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
 	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
 	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
 
-	#fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
-	plt.title('Grays and Torreys 3D Topographic Map')
+	fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
+	plt.title(mapName + ' 3D Topographic Map')
 	ax.set_xlabel('Degrees longitude')
 	ax.set_ylabel('Degrees lattitude')
 	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
 
-renderVisualData()
+if __name__ == '__main__':
+	name = 'longspeak'
+	mapName = 'Longs Peak'
+	#coordinates = []
+	#getXYZData(*coordinates)
+	xyzDF = pd.read_csv('data/' + name + 'XYZ.csv')
+	renderVisualData()
