@@ -5,6 +5,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import topoMapReader as tMap
 
 resolution = 50
 name = ''
@@ -53,6 +54,10 @@ def getXYZData(upperLeftCornerLat, upperLeftCornerLong, bottomRightCornerLat, bo
 
 	xyzDF = pd.DataFrame(xyzArray, columns = ['lattitude', 'longitude', 'elevation'])
 	xyzCSV = xyzDF.to_csv('data/' + name + 'XYZ.csv')
+
+elevData, regionLatArray, regionLongArray = tMap.readGeoData('n41w106', [40.875289, -105.643432], [40.231365, -105.629274])
+numRows, numCols = elevData.shape
+print(elevData.shape)
 
 def generateNodeElevationDict():
 	elevationArray = np.array(xyzDF['elevation'])
@@ -254,8 +259,8 @@ def renderVisualData():
 	plt.show()
 
 if __name__ == '__main__':
-	name = 'longspeak'
-	mapName = 'Longs Peak'
+	name = 'graystorreys'
+	mapName = 'Grays and Torreys'
 	#coordinates = []
 	#getXYZData(*coordinates)
 	xyzDF = pd.read_csv('data/' + name + 'XYZ.csv')

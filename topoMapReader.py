@@ -67,14 +67,14 @@ def readGeoData(mapName, NWCorner = None, SECorner = None, units = 'imperial'):
 	return regionElevData, regionLatArray, regionLongArray
 
 def dataContourPlot(title = None):
-	elevData, regionLatArray, regionLongArray = readGeoData('n40w107', [39.36, -106.16], [39.3, -106.08])
+	elevData, regionLatArray, regionLongArray = readGeoData('n41w106', [40.275289, -105.643432], [40.231365, -105.569274])
 
 	scaleLowerLim = int(np.round(np.amin(elevData) * 0.95, -3))
 	scaleUpperLim = int(np.round(np.amax(elevData) * 1.05, -3))
 
 	ax = plt.axes(projection = '3d')
 	X, Y = np.meshgrid(regionLongArray, regionLatArray)
-	surfacePlot = ax.plot_surface(X, Y, elevData, cmap = "terrain", antialiased=False)
+	surfacePlot = ax.plot_surface(X, Y, elevData, cmap = "terrain")
 	ax.set_xlabel('Degrees Longitude')
 	ax.set_ylabel('Degrees Lattitude')
 	ax.set_zlabel('Elevation (Feet ASL)')
@@ -85,5 +85,3 @@ def dataContourPlot(title = None):
 	cbar = plt.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
 
 	plt.show()
-
-dataContourPlot(title = 'North Mosquito and Tenmile Range')
