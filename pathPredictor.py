@@ -55,11 +55,8 @@ def getXYZData(upperLeftCornerLat, upperLeftCornerLong, bottomRightCornerLat, bo
 	xyzDF = pd.DataFrame(xyzArray, columns = ['lattitude', 'longitude', 'elevation'])
 	xyzCSV = xyzDF.to_csv('data/' + name + 'XYZ.csv')
 
-elevData, regionLatArray, regionLongArray = tMap.readGeoData('n41w106', [40.875289, -105.643432], [40.231365, -105.629274])
-numRows, numCols = elevData.shape
-print(elevData.shape)
-
 def generateNodeElevationDict():
+
 	elevationArray = np.array(xyzDF['elevation'])
 
 	nodeElevationValuesDict = {}
@@ -79,7 +76,6 @@ def nodeGraphGeneration(resolution):
 		for j in range(resolution):
 			nodeRow.append(i*resolution + (j+1))
 		nodeMatrix.append(nodeRow)
-
 
 	boundedNodeMatrix =  [np.zeros(resolution + 2, dtype = int)]
 
@@ -103,6 +99,68 @@ def nodeGraphGeneration(resolution):
 				adjacentNodeElevation = nodeElevationDict[i]
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
 
+				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation)**2})
+
+			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
+
+	nodeMap = adjacentNodeDict
+	return nodeMap
+
+def generateNodeElevationDictNew():
+	elevData, regionLatRange, regionLongRange = tMap.readGeoData(mapName = 'n41w106', NWCorner = [40.286528, -105.635828], SECorner = [40.228733, -105.568827])
+	numRows, numCols = elevData.shape
+
+	elevDataFlat = elevData.flatten()
+	numDataPoints = len(elevDataFlat)
+
+	nodeElevationDict = {}
+
+	for i in range(numDataPoints):
+		nodeElevationDict.update({i+1 : elevDataFlat[i]})
+
+	return nodeElevationDict, numRows, numCols
+
+def nodeGraphGenerationNew():
+	nodeMatrix = []
+	adjacentNodeDict = {}
+
+	nodeElevationDict, numRows, numCols = generateNodeElevationDictNew()
+
+	#Creates 2D Matrix of node ids, the shape of which is determined by the number size of the user selected region
+	for i in range(numRows):
+		nodeRow = []
+		for j in range(numCols):
+			nodeRow.append(i*numCols + (j+1))
+		nodeMatrix.append(nodeRow)
+
+	#Adds zero array first row
+	boundedNodeMatrix = [np.zeros(numCols + 2, dtype = int)]
+
+	#Adds zeros on either end of each row, and appends them to boundedNodeMatrix
+	for i in nodeMatrix:
+		i = np.insert(i, 0, 0)
+		i = np.insert(i, numCols + 1, 0)
+		boundedNodeMatrix.append(i)
+	#Adds zero array for last row
+	boundedNodeMatrix.append(np.zeros(numCols + 2, dtype = int))
+
+	#Iterates through each cell in the table
+	for row in range(1, numRows+1):
+		for column in range(1, numCols+1):
+			#Adjacent nodes to a current node are discovered (eight nodes surrounding the current node, similar to the 5 on a standard keyboard numPad)
+			adjacentNodeMatrix = [boundedNodeMatrix[row-1][column], boundedNodeMatrix[row-1][column+1], boundedNodeMatrix[row][column+1], boundedNodeMatrix[row+1][column+1], boundedNodeMatrix[row+1][column], boundedNodeMatrix[row+1][column-1], boundedNodeMatrix[row][column-1], boundedNodeMatrix[row-1][column-1]]
+			adjacentNodeMatrix = np.sort(adjacentNodeMatrix, kind = 'mergesort')
+			adjacentNodeMatrix = np.trim_zeros(adjacentNodeMatrix)
+
+			#Dictionary containing respective distances
+			adjacentNodeDistanceDict = {}
+
+			#Stores distances of each node to their eight neighbors in a dictionary
+			for i in adjacentNodeMatrix:
+				adjacentNodeElevation = nodeElevationDict[i]
+				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
+
+				#Distance modified to account for human energy conserving behavior
 				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation)**2})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
@@ -258,10 +316,10 @@ def renderVisualData():
 	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
 
-if __name__ == '__main__':
-	name = 'graystorreys'
-	mapName = 'Grays and Torreys'
-	#coordinates = []
-	#getXYZData(*coordinates)
-	xyzDF = pd.read_csv('data/' + name + 'XYZ.csv')
-	renderVisualData()
+# if __name__ == '__main__':
+# 	name = 'graystorreys'
+# 	mapName = 'Grays and Torreys'
+# 	#coordinates = []
+# 	#getXYZData(*coordinates)
+# 	xyzDF = pd.read_csv('data/' + name + 'XYZ.csv')
+# 	renderVisualData()

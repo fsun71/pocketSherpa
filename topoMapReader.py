@@ -61,19 +61,19 @@ def readGeoData(mapName, NWCorner = None, SECorner = None, units = 'imperial'):
 	regionBoundsArray = [regionSELat, regionNWLat, regionNWLong, regionSELong]
 	latDimension, longDimension = regionElevData.shape
 
-	regionLatArray = np.arange(regionSELat, regionNWLat, step = (regionNWLat - regionSELat) / latDimension)
-	regionLongArray = np.arange(regionNWLong, regionSELong, step = (regionSELong - regionNWLong) / longDimension)
+	regionLatRange = np.arange(regionSELat, regionNWLat, step = (regionNWLat - regionSELat) / latDimension)
+	regionLongRange = np.arange(regionNWLong, regionSELong, step = (regionSELong - regionNWLong) / longDimension)
 
-	return regionElevData, regionLatArray, regionLongArray
+	return regionElevData, regionLatRange, regionLongRange
 
-def dataContourPlot(title = None):
-	elevData, regionLatArray, regionLongArray = readGeoData('n41w106', [40.275289, -105.643432], [40.231365, -105.569274])
-
+def dataContourPlot(mapName, NWCorner = None, SECorner = None, title = None):
+	elevData, regionLatRange, regionLongRange = readGeoData(fileName, NWCorner, SECorner)
+	print(elevData, regionLatRange, regionLongRange)
 	scaleLowerLim = int(np.round(np.amin(elevData) * 0.95, -3))
 	scaleUpperLim = int(np.round(np.amax(elevData) * 1.05, -3))
 
 	ax = plt.axes(projection = '3d')
-	X, Y = np.meshgrid(regionLongArray, regionLatArray)
+	X, Y = np.meshgrid(regionLongRange, regionLatRange)
 	surfacePlot = ax.plot_surface(X, Y, elevData, cmap = "terrain")
 	ax.set_xlabel('Degrees Longitude')
 	ax.set_ylabel('Degrees Lattitude')
