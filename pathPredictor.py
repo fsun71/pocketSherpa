@@ -11,102 +11,7 @@ resolution = 50
 name = ''
 mapName = ''
 
-def getXYZData(upperLeftCornerLat, upperLeftCornerLong, bottomRightCornerLat, bottomRightCornerLong):
-
-	latRange = abs(upperLeftCornerLat - bottomRightCornerLat)
-	longRange = abs(upperLeftCornerLong - bottomRightCornerLong)
-
-	latRes = latRange / resolution
-	longRes = longRange / resolution
-
-	latArray = []
-	longArray = []
-	xyArray = []
-	xyzArray = []
-
-	for i in range(resolution):
-		increment = i * latRes
-		latArray.append(np.round(bottomRightCornerLat + increment, 4))
-
-	for i in range(resolution):
-		increment = i * longRes
-		longArray.append(np.round(upperLeftCornerLong + increment, 4))
-
-	for latitude in latArray:
-		for longitude in longArray:
-			xyArray.append([latitude, longitude])
-
-	apiKey = "&key=AIzaSyCrMWKfqCfy9ANE4eYARxDEWQb066qzAVo"
-
-	for coordinate in xyArray:
-		lattitude = coordinate[0]
-		longitude = coordinate[1]
-
-		elevation = 0
-
-		elevationRequestUrl = 'https://maps.googleapis.com/maps/api/elevation/json?locations=' + str(lattitude) + ',' + str(longitude) + apiKey
-		call = requests.post(elevationRequestUrl)
-		elevationRequestResult = json.loads(call.text)
-
-		elevation = elevationRequestResult['results'][0]['elevation']
-
-		xyzArray.append([coordinate[0], coordinate[1], elevation])
-
-	xyzDF = pd.DataFrame(xyzArray, columns = ['lattitude', 'longitude', 'elevation'])
-	xyzCSV = xyzDF.to_csv('data/' + name + 'XYZ.csv')
-
 def generateNodeElevationDict():
-
-	elevationArray = np.array(xyzDF['elevation'])
-
-	nodeElevationValuesDict = {}
-
-	for i in range(resolution**2):
-		nodeElevationValuesDict.update({i+1 : elevationArray[i]})
-
-	return nodeElevationValuesDict
-
-def nodeGraphGeneration(resolution):
-	nodeMatrix = []
-
-	nodeElevationDict = generateNodeElevationDict()
-
-	for i in range(resolution):
-		nodeRow = []
-		for j in range(resolution):
-			nodeRow.append(i*resolution + (j+1))
-		nodeMatrix.append(nodeRow)
-
-	boundedNodeMatrix =  [np.zeros(resolution + 2, dtype = int)]
-
-	for i in nodeMatrix:
-		i = np.insert(i, 0, 0)
-		i = np.insert(i, resolution + 1, 0)
-		boundedNodeMatrix.append(i)
-
-	boundedNodeMatrix.append(np.zeros(resolution + 2, dtype = int))
-	adjacentNodeDict = {}
-
-	for row in range(1, resolution+1):
-		for column in range(1, resolution+1):
-			adjacentNodeMatrix = [boundedNodeMatrix[row-1][column], boundedNodeMatrix[row-1][column+1], boundedNodeMatrix[row][column+1], boundedNodeMatrix[row+1][column+1], boundedNodeMatrix[row+1][column], boundedNodeMatrix[row+1][column-1], boundedNodeMatrix[row][column-1], boundedNodeMatrix[row-1][column-1]]
-			adjacentNodeMatrix = np.sort(adjacentNodeMatrix, kind = 'mergesort')
-			adjacentNodeMatrix = np.trim_zeros(adjacentNodeMatrix)
-
-			adjacentNodeDistanceDict = {}
-
-			for i in adjacentNodeMatrix:
-				adjacentNodeElevation = nodeElevationDict[i]
-				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
-
-				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation)**2})
-
-			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
-
-	nodeMap = adjacentNodeDict
-	return nodeMap
-
-def generateNodeElevationDictNew():
 	elevData, regionLatRange, regionLongRange = tMap.readGeoData(mapName = 'n41w106', NWCorner = [40.286528, -105.635828], SECorner = [40.228733, -105.568827])
 	numRows, numCols = elevData.shape
 
@@ -120,11 +25,11 @@ def generateNodeElevationDictNew():
 
 	return nodeElevationDict, numRows, numCols
 
-def nodeGraphGenerationNew():
+def nodeGraphGeneration():
 	nodeMatrix = []
 	adjacentNodeDict = {}
 
-	nodeElevationDict, numRows, numCols = generateNodeElevationDictNew()
+	nodeElevationDict, numRows, numCols = generateNodeElevationDict()
 
 	#Creates 2D Matrix of node ids, the shape of which is determined by the number size of the user selected region
 	for i in range(numRows):
@@ -166,12 +71,16 @@ def nodeGraphGenerationNew():
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
 	nodeMap = adjacentNodeDict
-	return nodeMap
+	return nodeMap, numRows, numCols
 
-def dijkstra(nodeMap, srcIndex, destIndex):
+def dijkstra(nodeMapOutput, srcIndex, destIndex):
 	inf = float('inf')
 	source = (srcIndex + 1)
 	dest =  destIndex + 1
+
+	nodeMap = nodeMapOutput[0]
+	numRows = nodeMapOutput[1]
+	numCols = nodeMapOutput[2]
 
 	#Establishes starting node and its respective distance value, establishes visited and unvisited node dictionary containers
 	visitedNodeMap = {}
@@ -184,7 +93,7 @@ def dijkstra(nodeMap, srcIndex, destIndex):
 
 	#Distance/cost map for every node, everything gets infinite distance except the starting node, which gets a value of zero
 	#Also creates map of every node's most efficient previous iteration, allowing for paths to be known
-	nodes = np.array(range(1, resolution**2 +1))
+	nodes = np.array(range(1, (numRows * numCols) + 1))
 	for node in nodes:
 		defaultDist = inf
 		prevNode = None
@@ -246,7 +155,8 @@ def dijkstra(nodeMap, srcIndex, destIndex):
 	return pathToDest
 
 def plotOptimalRoute(origin, destination):
-	pathToDest = dijkstra(nodeGraphGeneration(resolution), origin, destination)
+	#Need to get lat long elev data
+	pathToDest = dijkstra(nodeGraphGeneration(), origin, destination)
 
 	longitudePathArray = [] 
 	lattitudePathArray = []
