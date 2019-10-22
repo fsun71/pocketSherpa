@@ -10,15 +10,36 @@ import topoMapReader as tMap
 resolution = 50
 name = ''
 mapName = ''
+XYCoordDict = {}
+nodeElevationDict = {}
 
 def generateNodeElevationDict():
-	elevData, regionLatRange, regionLongRange = tMap.readGeoData(mapName = 'n41w106', NWCorner = [40.286528, -105.635828], SECorner = [40.228733, -105.568827])
+	NWCorner = [40.286528, -105.635828]
+	SECorner = [40.228733, -105.568827]
+
+	#Last point in nodeElevationDict
+	NECorner = [NWCorner[0], SECorner[1]]
+	#First point in nodeElevationDict
+	SWCorner = [SECorner[0], NWCorner[1]]
+
+	elevData, regionLatRange, regionLongRange = tMap.readGeoData(mapName = 'n41w106', NWCorner = NWCorner, SECorner = SECorner)
 	numRows, numCols = elevData.shape
 
 	elevDataFlat = elevData.flatten()
 	numDataPoints = len(elevDataFlat)
 
-	nodeElevationDict = {}
+	#Sets a corresponding lattitude/longitude pair for each node value 
+	for i in range(numRows):
+		latIncrement = ((NECorner[0] - SWCorner[0])/numRows) * i
+		latComponent = np.round(SWCorner[0] + latIncrement, 6)
+
+		for j in range(numCols):
+			cellValue = (i * numCols) + j + 1
+
+			longIncrement = ((NECorner[1] - SWCorner[1])/numCols) * j
+			longComponent = np.round(NWCorner[1] + longIncrement, 6)
+
+			XYCoordDict.update({cellValue : [latComponent, longComponent]})
 
 	for i in range(numDataPoints):
 		nodeElevationDict.update({i+1 : elevDataFlat[i]})
@@ -72,7 +93,7 @@ def nodeGraphGeneration():
 
 	nodeMap = adjacentNodeDict
 	return nodeMap, numRows, numCols
-
+ 
 def dijkstra(nodeMapOutput, srcIndex, destIndex):
 	inf = float('inf')
 	source = (srcIndex + 1)
@@ -152,43 +173,58 @@ def dijkstra(nodeMapOutput, srcIndex, destIndex):
 		#Sets new current node as the 'previous node' in the line above, working our way back the chain
 		currentNode = prevNodes[currentNode]
 
-	return pathToDest
+	return pathToDest, numRows, numCols
+
+#print(dijkstra(nodeGraphGeneration(), 4351, 1231))
 
 def plotOptimalRoute(origin, destination):
 	#Need to get lat long elev data
-	pathToDest = dijkstra(nodeGraphGeneration(), origin, destination)
+	pathToDest, numRows, numCols = dijkstra(nodeGraphGeneration(), origin, destination)
 
-	longitudePathArray = [] 
+	longitudePathArray = []
 	lattitudePathArray = []
 	elevationPathArray = []
 
 	for i in pathToDest:
-		longitudePathArray.append(xyzDF.iloc[i-1]['longitude'])
-		lattitudePathArray.append(xyzDF.iloc[i-1]['lattitude'])
-		elevationPathArray.append(xyzDF.iloc[i-1]['elevationFt'])
+		longitudePathArray.append(XYCoordDict[i][1])
+		lattitudePathArray.append(XYCoordDict[i][0])
+		elevationPathArray.append(nodeElevationDict[i])
 
-	originDestX = [xyzDF.iloc[origin]['longitude'], xyzDF.iloc[destination]['longitude']]
-	originDestY = [xyzDF.iloc[origin]['lattitude'], xyzDF.iloc[destination]['lattitude']]
-	originDestZ = [xyzDF.iloc[origin]['elevationFt'], xyzDF.iloc[destination]['elevationFt']]
+	originDestX = [XYCoordDict[origin][1], XYCoordDict[destination][1]]
+	originDestY = [XYCoordDict[origin][0], XYCoordDict[destination][0]]
+	originDestZ = [nodeElevationDict[origin], nodeElevationDict[destination]]
 
 	X, Y, Z = longitudePathArray, lattitudePathArray, elevationPathArray
-	return [X, Y, Z, originDestX, originDestY, originDestZ]
 
-def renderVisualData():
-	xyzDF['elevationFt'] = np.round(xyzDF['elevation'] * 3.28084, 6)
+	return [X, Y, Z, originDestX, originDestY, originDestZ], numRows, numCols
+
+def renderVisualData3D():
+	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
+	pathXYZ, numRows, numCols = plotOptimalRoute(1, 50577)
+
+	#Optimal Path coordinates set
+	pathX = pathXYZ[0]
+	pathY = pathXYZ[1]
+	pathZ = pathXYZ[2]
+
+	#Origin/Destination information set
+	originDestX = pathXYZ[3]
+	originDestY = pathXYZ[4]
+	originDestZ = pathXYZ[5]
 
 	xDataArray = []
 	yDataArray = []
 	zDataArray = []
 
-	for i in range(resolution):
+	for i in range(numRows):
 		tempContainerX = []
 		tempContainerY = []
 		tempContainerZ = []
-		for j in range(resolution):
-			tempContainerX.append(xyzDF['longitude'][(i*resolution)+j])
-			tempContainerY.append(xyzDF['lattitude'][(i*resolution)+j])
-			tempContainerZ.append(xyzDF['elevationFt'][(i*resolution)+j])
+
+		for j in range(numCols):
+			tempContainerX.append(XYCoordDict[(i*numCols) + j + 1][1])
+			tempContainerY.append(XYCoordDict[(i*numCols) + j + 1][0])
+			tempContainerZ.append(nodeElevationDict[(i*numCols) + j + 1])
 
 		xDataArray.append(tempContainerX)
 		yDataArray.append(tempContainerY)
@@ -199,15 +235,6 @@ def renderVisualData():
 	fig = plt.figure()
 	ax = plt.axes(projection = '3d')
 
-	pathXYZ = plotOptimalRoute(2144, xyzDF['elevation'].idxmax())
-
-	pathX = pathXYZ[0]
-	pathY = pathXYZ[1]
-	pathZ = pathXYZ[2]
-
-	originDestX = pathXYZ[3]
-	originDestY = pathXYZ[4]
-	originDestZ = pathXYZ[5]
 
 	ax.scatter(pathX, pathY, pathZ, alpha = 0)
 
@@ -216,8 +243,8 @@ def renderVisualData():
 
 	surfacePlot = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgecolor='none', alpha = 0.5)
 	ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
-	x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
-	y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
+	# x_range = [xyzDF['longitude'].min(), xyzDF['longitude'].max()]
+	# y_range = [xyzDF['lattitude'].min(), xyzDF['lattitude'].max()]
 
 	fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
 	plt.title(mapName + ' 3D Topographic Map')
@@ -225,6 +252,60 @@ def renderVisualData():
 	ax.set_ylabel('Degrees lattitude')
 	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
+
+def renderVisualData2D():
+	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
+	pathXYZ, numRows, numCols = plotOptimalRoute(1, 50577)
+
+	#Optimal Path coordinates set
+	pathX = pathXYZ[0]
+	pathY = pathXYZ[1]
+	pathZ = pathXYZ[2]
+
+	#Origin/Destination information set
+	originDestX = pathXYZ[3]
+	originDestY = pathXYZ[4]
+	originDestZ = pathXYZ[5]
+
+	xDataArray = []
+	yDataArray = []
+	zDataArray = []
+
+	for i in range(numRows):
+		tempContainerX = []
+		tempContainerY = []
+		tempContainerZ = []
+
+		for j in range(numCols):
+			tempContainerX.append(XYCoordDict[(i*numCols) + j + 1][1])
+			tempContainerY.append(XYCoordDict[(i*numCols) + j + 1][0])
+			tempContainerZ.append(nodeElevationDict[(i*numCols) + j + 1])
+
+		xDataArray.append(tempContainerX)
+		yDataArray.append(tempContainerY)
+		zDataArray.append(tempContainerZ)
+
+	X, Y, Z = np.array(xDataArray), np.array(yDataArray), np.array(zDataArray)
+	
+	fig = plt.figure()
+	ax = plt.axes(projection = '3d')
+
+	ax.scatter(pathX, pathY, pathZ, alpha = 0)
+
+	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = 'red', linewidth = 4)
+	ax.add_line(line)
+
+	surfacePlot = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgwecolor='none', alpha = 0.5)
+	ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
+
+	fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
+	plt.title(mapName + ' 3D Topographic Map')
+	ax.set_xlabel('Degrees longitude')
+	ax.set_ylabel('Degrees lattitude')
+	ax.set_zlabel('Elevation ASL (feet)')
+	plt.show()
+
+renderVisualData2D()
 
 # if __name__ == '__main__':
 # 	name = 'graystorreys'
