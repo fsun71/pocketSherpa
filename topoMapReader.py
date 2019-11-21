@@ -67,8 +67,9 @@ def readGeoData(mapName, NWCorner = None, SECorner = None, units = 'imperial'):
 	return regionElevData, regionLatRange, regionLongRange
 
 def dataContourPlot(mapName, NWCorner = None, SECorner = None, title = None):
-	elevData, regionLatRange, regionLongRange = readGeoData(fileName, NWCorner, SECorner)
+	elevData, regionLatRange, regionLongRange = readGeoData(mapName, NWCorner, SECorner)
 	print(elevData, regionLatRange, regionLongRange)
+	elevData[0][-1] = 25000
 	scaleLowerLim = int(np.round(np.amin(elevData) * 0.95, -3))
 	scaleUpperLim = int(np.round(np.amax(elevData) * 1.05, -3))
 

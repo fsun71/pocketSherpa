@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import topoMapReader as tMap
+from dijkstra import dijkstra
 
 resolution = 50
 name = ''
@@ -94,86 +95,85 @@ def nodeGraphGeneration():
 	nodeMap = adjacentNodeDict
 	return nodeMap, numRows, numCols
  
-def dijkstra(nodeMapOutput, srcIndex, destIndex):
-	inf = float('inf')
-	source = (srcIndex + 1)
-	dest =  destIndex + 1
+# def dijkstra(nodeMapOutput, srcIndex, destIndex):
+# 	inf = float('inf')
+# 	source = (srcIndex + 1)
+# 	dest =  destIndex + 1
 
-	nodeMap = nodeMapOutput[0]
-	numRows = nodeMapOutput[1]
-	numCols = nodeMapOutput[2]
+# 	nodeMap = nodeMapOutput[0]
+# 	numRows = nodeMapOutput[1]
+# 	numCols = nodeMapOutput[2]
 
-	#Establishes starting node and its respective distance value, establishes visited and unvisited node dictionary containers
-	visitedNodeMap = {}
-	unvisitedNodeMap = {}
-	currentDistance = 0
-	currentNode = source
+# 	#Establishes starting node and its respective distance value, establishes visited and unvisited node dictionary containers
+# 	visitedNodeMap = {}
+# 	unvisitedNodeMap = {}
+# 	currentDistance = 0
+# 	currentNode = source
 
-	#Establishes storage container for list of nodes that came before the current node, used to determine waypoints of shortest path
-	prevNodes = {}
+# 	#Establishes storage container for list of nodes that came before the current node, used to determine waypoints of shortest path
+# 	prevNodes = {}
 
-	#Distance/cost map for every node, everything gets infinite distance except the starting node, which gets a value of zero
-	#Also creates map of every node's most efficient previous iteration, allowing for paths to be known
-	nodes = np.array(range(1, (numRows * numCols) + 1))
-	for node in nodes:
-		defaultDist = inf
-		prevNode = None
+# 	#Distance/cost map for every node, everything gets infinite distance except the starting node, which gets a value of zero
+# 	#Also creates map of every node's most efficient previous iteration, allowing for paths to be known
+# 	nodes = np.array(range(1, (numRows * numCols) + 1))
+# 	for node in nodes:
+# 		defaultDist = inf
+# 		prevNode = None
 
-		if node == source:
-			defaultDist = currentDistance
+# 		if node == source:
+# 			defaultDist = currentDistance
 
-		unvisitedNodeMap.update({node : defaultDist})
-		prevNodes.update({node : prevNode})
+# 		unvisitedNodeMap.update({node : defaultDist})
+# 		prevNodes.update({node : prevNode})
 
+# 	while True:
+# 	    for adjacentNode, nodeDistance in nodeMap[currentNode].items():
+# 	    	#Do not investigate the adjacent node if it has already been visited
+# 	        if adjacentNode in visitedNodeMap:
+# 	        	continue
+# 	        #Finds tentative shortest distance to currentNode from origin by summing the current distance up to the node, and the distance to the node itself
+# 	        tentativeDistance = currentDistance + nodeDistance
 
-	while True:
-	    for adjacentNode, nodeDistance in nodeMap[currentNode].items():
-	    	#Do not investigate the adjacent node if it has already been visited
-	        if adjacentNode in visitedNodeMap:
-	        	continue
-	        #Finds tentative shortest distance to currentNode from origin by summing the current distance up to the node, and the distance to the node itself
-	        tentativeDistance = currentDistance + nodeDistance
+# 	        #If the calculated tentative distance to an adjacent node is less than the currently given minimum on the unvisited node map, set the calculated tentative distance as the new minimum
+# 	        #Also set the most efficient previous node on the prevNodes node map
+# 	        if tentativeDistance < unvisitedNodeMap[adjacentNode]:
+# 	            unvisitedNodeMap[adjacentNode] = tentativeDistance
+# 	            prevNodes[adjacentNode] = currentNode
 
-	        #If the calculated tentative distance to an adjacent node is less than the currently given minimum on the unvisited node map, set the calculated tentative distance as the new minimum
-	        #Also set the most efficient previous node on the prevNodes node map
-	        if tentativeDistance < unvisitedNodeMap[adjacentNode]:
-	            unvisitedNodeMap[adjacentNode] = tentativeDistance
-	            prevNodes[adjacentNode] = currentNode
+# 	    #Once the minimum adjacent node to the current node is found, set the minimum adjacent node as the new current node and move the previous current node to the visited dictionary (never to be checked again)
+# 	    visitedNodeMap[currentNode] = currentDistance
+# 	    del unvisitedNodeMap[currentNode]
 
-	    #Once the minimum adjacent node to the current node is found, set the minimum adjacent node as the new current node and move the previous current node to the visited dictionary (never to be checked again)
-	    visitedNodeMap[currentNode] = currentDistance
-	    del unvisitedNodeMap[currentNode]
+# 	    #Break once minimum distance is calculated and stored (see above two lines) for the destination node
+# 	    if currentNode == destIndex:
+# 	    	break
 
-	    #Break once minimum distance is calculated and stored (see above two lines) for the destination node
-	    if currentNode == destIndex:
-	    	break
+# 	    #Set list of nodes with non-infinite distances
+# 	    feasibleNodes = []
+# 	    for node in unvisitedNodeMap.items():
+# 	    	if node[1] != inf:
+# 	    		feasibleNodes.append(node)
 
-	    #Set list of nodes with non-infinite distances
-	    feasibleNodes = []
-	    for node in unvisitedNodeMap.items():
-	    	if node[1] != inf:
-	    		feasibleNodes.append(node)
+# 	    #Find node in entire feasible region with lowest cost/distance value (sort dictionary by ascending value, choose key of first entry)
+# 	    newCurrentNode, currentDistance = sorted(feasibleNodes, key = lambda x: x[1])[0]	
 
-	    #Find node in entire feasible region with lowest cost/distance value (sort dictionary by ascending value, choose key of first entry)
-	    newCurrentNode, currentDistance = sorted(feasibleNodes, key = lambda x: x[1])[0]	
+# 	    #New current node set
+# 	    currentNode = newCurrentNode
 
-	    #New current node set
-	    currentNode = newCurrentNode
+# 	#Generates shortest path to the destination from the source
+# 	currentNode = dest
+# 	pathToDest = [currentNode]
 
-	#Generates shortest path to the destination from the source
-	currentNode = dest
-	pathToDest = [currentNode]
+# 	while True:
+# 		#Stop when we get to the source
+# 		if prevNodes[currentNode] == None:
+# 			break
+# 		#Appends the node prior to the current one being examined to the path array
+# 		pathToDest.append(prevNodes[currentNode])
+# 		#Sets new current node as the 'previous node' in the line above, working our way back the chain
+# 		currentNode = prevNodes[currentNode]
 
-	while True:
-		#Stop when we get to the source
-		if prevNodes[currentNode] == None:
-			break
-		#Appends the node prior to the current one being examined to the path array
-		pathToDest.append(prevNodes[currentNode])
-		#Sets new current node as the 'previous node' in the line above, working our way back the chain
-		currentNode = prevNodes[currentNode]
-
-	return pathToDest, numRows, numCols
+# 	return pathToDest, numRows, numCols
 
 #print(dijkstra(nodeGraphGeneration(), 4351, 1231))
 
@@ -288,29 +288,20 @@ def renderVisualData2D():
 	X, Y, Z = np.array(xDataArray), np.array(yDataArray), np.array(zDataArray)
 	
 	fig = plt.figure()
-	ax = plt.axes(projection = '3d')
+	ax = plt.axes()
 
-	ax.scatter(pathX, pathY, pathZ, alpha = 0)
+	#ax.scatter(pathX, pathY, pathZ, alpha = 0)
 
-	line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = 'red', linewidth = 4)
-	ax.add_line(line)
+	#line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = 'red', linewidth = 4)
+	#ax.add_line(line)
 
-	surfacePlot = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='terrain', edgwecolor='none', alpha = 0.5)
-	ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
+	surfacePlot = plt.contour(X, Y, Z)
+	#ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
 
 	fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
-	plt.title(mapName + ' 3D Topographic Map')
+	plt.title(mapName + ' Contour Map')
 	ax.set_xlabel('Degrees longitude')
 	ax.set_ylabel('Degrees lattitude')
-	ax.set_zlabel('Elevation ASL (feet)')
 	plt.show()
 
-renderVisualData2D()
-
-# if __name__ == '__main__':
-# 	name = 'graystorreys'
-# 	mapName = 'Grays and Torreys'
-# 	#coordinates = []
-# 	#getXYZData(*coordinates)
-# 	xyzDF = pd.read_csv('data/' + name + 'XYZ.csv')
-# 	renderVisualData()
+renderVisualData3D()
