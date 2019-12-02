@@ -8,7 +8,7 @@
 -requests
 
 ## Required packages that can installed with whl file using pip:
-https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal
+osgeo (https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
 
 ## Features:
 renderVisualData2D() in pathPredictor.py generates 3D model with most efficient path
