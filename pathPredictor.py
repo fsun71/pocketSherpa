@@ -117,7 +117,7 @@ def nodeGraphGeneration():
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
 
 				#Distance modified to account for human energy conserving behavior
-				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation) ** 2})
+				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation)) ** 1.8})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
@@ -241,11 +241,11 @@ def coordinateExport():
 	for coord in range(len(pathX)):
 		optimalXY.append([pathX[coord], pathY[coord]])
 
-	routeDataArray = np.array(optimalXY)
-	routeDataDF = pd.DataFrame(routeDataArray)
-	export_csv = routeDataDF.to_csv("optimalRoute2.csv", index = None, header = True)
+	# routeDataArray = np.array(optimalXY)
+	# routeDataDF = pd.DataFrame(routeDataArray)
+	# export_csv = routeDataDF.to_csv("optimalRoute2.csv", index = None, header = True)
 
-	#gpx.toGPX(pathX, pathY)
+	gpx.toGPX(pathX, pathY)
 
 def renderVisualData3D():
 	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
@@ -361,5 +361,6 @@ def renderVisualData2D():
 	plt.show()
 
 generateNodeElevationDict()
-renderVisualData3D()
-renderVisualData2D()
+#renderVisualData3D()
+coordinateExport()
+#renderVisualData2D()
