@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import topoMapReader as tMap
-#from dijkstraC import dijkstra
+import gpxConverter as gpx
 
 name = ''
 mapName = ''
@@ -14,15 +14,17 @@ XYCoordDict = {}
 nodeElevationDict = {}
 
 def generateNodeElevationDict():
-	NWCorner = [40.270000, -105.645828]
-	SECorner = [40.238733, -105.608827]
+	NWCorner = [39.66, -105.825]
+	SECorner = [39.625, -105.78]
+
+	tHeadCoords = [39.659, -105.785]
 
 	#Last point in nodeElevationDict
 	NECorner = [NWCorner[0], SECorner[1]]
 	#First point in nodeElevationDict
 	SWCorner = [SECorner[0], NWCorner[1]]
 
-	elevData, regionLatRange, regionLongRange = tMap.readGeoData(mapName = 'n41w106', NWCorner = NWCorner, SECorner = SECorner)
+	elevData, regionLatRange, regionLongRange = tMap.readGeoData(mapName = 'n40w106', NWCorner = NWCorner, SECorner = SECorner)
 	numRows, numCols = elevData.shape
 
 	elevDataFlat = elevData.flatten()
@@ -52,9 +54,25 @@ def generateNodeElevationDict():
 
 	global regionHighPt
 	global regionLowPt
+	global trailHeadPt
 
 	regionHighPt = (maxPtIndex, maxPtElev)
 	regionLowPt = (minPtIndex, minPtElev)
+
+	XYFlatten = []
+	tHeadFlatten = tHeadCoords[0] / tHeadCoords[1]
+
+	for XYPair in XYCoordDict:
+		XYFlatten.append(XYCoordDict[XYPair][0] / XYCoordDict[XYPair][1])
+
+	if len(tHeadCoords) == 0:
+		trailHeadPt = 0
+	else:
+		tHeadKeyVal = min(XYFlatten, key = lambda x : abs(x - tHeadFlatten))
+		tHeadIndex = XYFlatten.index(tHeadKeyVal) + 1
+		tHeadElev = nodeElevationDict[tHeadIndex]
+
+		trailHeadPt = (tHeadIndex, tHeadElev)
 
 	return nodeElevationDict, numRows, numCols
 
@@ -99,7 +117,7 @@ def nodeGraphGeneration():
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
 
 				#Distance modified to account for human energy conserving behavior
-				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation)**2})
+				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) / currentNodeElevation) ** 2})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
@@ -187,8 +205,6 @@ def dijkstra(nodeMapOutput, srcIndex, destIndex):
 
 	return pathToDest, numRows, numCols
 
-#print(dijkstra(nodeGraphGeneration(), 4351, 1231))
-
 def plotOptimalRoute(origin, destination):
 	#Need to get lat long elev data
 	pathToDest, numRows, numCols = dijkstra(nodeGraphGeneration(), origin, destination)
@@ -210,9 +226,33 @@ def plotOptimalRoute(origin, destination):
 
 	return [X, Y, Z, originDestX, originDestY, originDestZ], numRows, numCols
 
+def coordinateExport():
+	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
+	if trailHeadPt == 0:
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
+	else: 
+		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], regionHighPt[0])
+
+	pathX = pathXYZ[0]
+	pathY = pathXYZ[1]
+
+	optimalXY = []
+
+	for coord in range(len(pathX)):
+		optimalXY.append([pathX[coord], pathY[coord]])
+
+	routeDataArray = np.array(optimalXY)
+	routeDataDF = pd.DataFrame(routeDataArray)
+	export_csv = routeDataDF.to_csv("optimalRoute2.csv", index = None, header = True)
+
+	#gpx.toGPX(pathX, pathY)
+
 def renderVisualData3D():
 	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
-	pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
+	if trailHeadPt == 0:
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
+	else: 
+		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], regionHighPt[0])
 
 	#Optimal Path coordinates set
 	pathX = pathXYZ[0]
@@ -267,7 +307,10 @@ def renderVisualData3D():
 
 def renderVisualData2D():
 	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
-	pathXYZ, numRows, numCols = plotOptimalRoute(1, 50577)
+	if trailHeadPt == 0:
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
+	else: 
+		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], regionHighPt[0])
 
 	#Optimal Path coordinates set
 	pathX = pathXYZ[0]
@@ -280,7 +323,7 @@ def renderVisualData2D():
 	originDestZ = pathXYZ[5]
 
 	xDataArray = []
-	yDataArray = []
+	yDataArray = []	
 	zDataArray = []
 
 	for i in range(numRows):
@@ -297,24 +340,26 @@ def renderVisualData2D():
 		yDataArray.append(tempContainerY)
 		zDataArray.append(tempContainerZ)
 
+	#Prepares data for visualization
+	plotLevels = np.array(range(9000, 14500, 40))
 	X, Y, Z = np.array(xDataArray), np.array(yDataArray), np.array(zDataArray)
-	
 	fig = plt.figure()
 	ax = plt.axes()
 
-	#ax.scatter(pathX, pathY, pathZ, alpha = 0)
+	#Draws contour map and optimal path
+	surfacePlot = plt.contourf(X, Y, Z, levels = plotLevels, cmap = 'terrain')
+	plt.plot(pathX, pathY, linewidth = 3, color = 'red')
 
-	#line = mplot3d.art3d.Line3D(pathX, pathY, pathZ, color = 'red', linewidth = 4)
-	#ax.add_line(line)
-
-	surfacePlot = plt.contour(X, Y, Z)
-	#ax.scatter(originDestX, originDestY, originDestZ, color = 'red', s = 100, alpha = 1, marker = '^')
-
+	def on_pick(event):
+		x, y = artist.get_xdata(), artist.get_ydata()
+	
+	#Assorted labeling and legends
 	fig.colorbar(surfacePlot, shrink = 0.4, aspect = 10)
-	plt.title(mapName + ' Contour Map')
+	plt.title(mapName + 'Regional Contour Map')
 	ax.set_xlabel('Degrees longitude')
 	ax.set_ylabel('Degrees lattitude')
 	plt.show()
 
 generateNodeElevationDict()
 renderVisualData3D()
+renderVisualData2D()
