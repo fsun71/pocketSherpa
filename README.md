@@ -11,7 +11,7 @@
 
 -requests
 
--lxml.html
+-lxml & xml
 
 -sklearn
 
