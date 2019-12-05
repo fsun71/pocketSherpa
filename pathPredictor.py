@@ -14,10 +14,16 @@ XYCoordDict = {}
 nodeElevationDict = {}
 
 def generateNodeElevationDict():
-	NWCorner = [39.66, -105.825]
-	SECorner = [39.625, -105.78]
+	global regionHighPt
+	global regionLowPt
+	global trailHeadPt
+	global peakPt
 
-	tHeadCoords = [39.659, -105.785]
+	NWCorner = [39.665, -105.825]
+	SECorner = [39.630, -105.78]
+
+	tHeadCoords = [39.660825, -105.784673]
+	peakCoords = []
 
 	#Last point in nodeElevationDict
 	NECorner = [NWCorner[0], SECorner[1]]
@@ -52,15 +58,10 @@ def generateNodeElevationDict():
 	minPtIndex = min(nodeElevationDict, key=nodeElevationDict.get)
 	minPtElev = nodeElevationDict[minPtIndex]
 
-	global regionHighPt
-	global regionLowPt
-	global trailHeadPt
-
 	regionHighPt = (maxPtIndex, maxPtElev)
 	regionLowPt = (minPtIndex, minPtElev)
 
 	XYFlatten = []
-	tHeadFlatten = tHeadCoords[0] / tHeadCoords[1]
 
 	for XYPair in XYCoordDict:
 		XYFlatten.append(XYCoordDict[XYPair][0] / XYCoordDict[XYPair][1])
@@ -68,11 +69,22 @@ def generateNodeElevationDict():
 	if len(tHeadCoords) == 0:
 		trailHeadPt = 0
 	else:
+		tHeadFlatten = tHeadCoords[0] / tHeadCoords[1]
 		tHeadKeyVal = min(XYFlatten, key = lambda x : abs(x - tHeadFlatten))
 		tHeadIndex = XYFlatten.index(tHeadKeyVal) + 1
 		tHeadElev = nodeElevationDict[tHeadIndex]
 
 		trailHeadPt = (tHeadIndex, tHeadElev)
+
+	if len(peakCoords) == 0:
+		peakPt = 0
+	else:
+		peakFlatten = peakCoords[0] / peakCoords[1]
+		peakKeyVal = min(XYFlatten, key = lambda x : abs(x - peakFlatten))
+		peakIndex = XYFlatten.index(peakKeyVal) + 1
+		peakElev = nodeElevationDict[peakIndex]
+
+		peakPt = (peakIndex, peakElev)
 
 	return nodeElevationDict, numRows, numCols
 
@@ -115,9 +127,11 @@ def nodeGraphGeneration():
 			for i in adjacentNodeMatrix:
 				adjacentNodeElevation = nodeElevationDict[i]
 				currentNodeElevation = nodeElevationDict[boundedNodeMatrix[row][column]]
-
+				peakXY = XYCoordDict[regionHighPt[0]]
+				nodeXY = XYCoordDict[i]
+				distanceHeuristic = np.sqrt((peakXY[0] - nodeXY[0])**2 + (peakXY[1] - nodeXY[1])**2)
 				#Distance modified to account for human energy conserving behavior
-				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation)) ** 1.8})
+				adjacentNodeDistanceDict.update({i : ((adjacentNodeElevation - currentNodeElevation) ** 2 * distanceHeuristic)})
 
 			adjacentNodeDict.update({boundedNodeMatrix[row][column] : adjacentNodeDistanceDict})
 
@@ -161,6 +175,9 @@ def dijkstra(nodeMapOutput, srcIndex, destIndex):
 	    	#Do not investigate the adjacent node if it has already been visited
 	        if adjacentNode in visitedNodeMap:
 	        	continue
+
+	        if currentNode == destIndex:
+	        	break
 	        #Finds tentative shortest distance to currentNode from origin by summing the current distance up to the node, and the distance to the node itself
 	        tentativeDistance = currentDistance + nodeDistance
 
@@ -228,10 +245,14 @@ def plotOptimalRoute(origin, destination):
 
 def coordinateExport():
 	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
-	if trailHeadPt == 0:
-		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
-	else: 
+	if trailHeadPt != 0 and peakPt != 0:
+		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], peakPt[0])
+	elif trailHeadPt != 0 and peakPt == 0: 
 		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], regionHighPt[0])
+	elif trailHeadPt == 0 and peakPt != 0: 
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], peakPt[0])
+	else:
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
 
 	pathX = pathXYZ[0]
 	pathY = pathXYZ[1]
@@ -249,10 +270,14 @@ def coordinateExport():
 
 def renderVisualData3D():
 	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
-	if trailHeadPt == 0:
-		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
-	else: 
+	if trailHeadPt != 0 and peakPt != 0:
+		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], peakPt[0])
+	elif trailHeadPt != 0 and peakPt == 0: 
 		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], regionHighPt[0])
+	elif trailHeadPt == 0 and peakPt != 0: 
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], peakPt[0])
+	else:
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
 
 	#Optimal Path coordinates set
 	pathX = pathXYZ[0]
@@ -307,10 +332,14 @@ def renderVisualData3D():
 
 def renderVisualData2D():
 	#Fetches data regarding the optimal path coordinates, origin, destination, numRows, and numCols
-	if trailHeadPt == 0:
-		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
-	else: 
+	if trailHeadPt != 0 and peakPt != 0:
+		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], peakPt[0])
+	elif trailHeadPt != 0 and peakPt == 0: 
 		pathXYZ, numRows, numCols = plotOptimalRoute(trailHeadPt[0], regionHighPt[0])
+	elif trailHeadPt == 0 and peakPt != 0: 
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], peakPt[0])
+	else:
+		pathXYZ, numRows, numCols = plotOptimalRoute(regionLowPt[0], regionHighPt[0])
 
 	#Optimal Path coordinates set
 	pathX = pathXYZ[0]
@@ -361,6 +390,6 @@ def renderVisualData2D():
 	plt.show()
 
 generateNodeElevationDict()
-#renderVisualData3D()
-coordinateExport()
+renderVisualData3D()
+#coordinateExport()
 #renderVisualData2D()
