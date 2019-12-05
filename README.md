@@ -2,10 +2,18 @@
 
 ## Required packages that can be acquired with pip:
 -numpy
+
 -pandas
+
 -csv
+
 -matplotlib
+
 -requests
+
+-lxml.html
+
+-sklearn
 
 ## Required packages that can installed with whl file using pip:
 osgeo (https://www.lfd.uci.edu/~gohlke/pythonlibs/#gdal)
