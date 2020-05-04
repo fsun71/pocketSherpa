@@ -9,6 +9,9 @@ Bonus GUI explorer of 14er data included, allows user to find the best 14er for 
 
 (NOTE: process will take a long time in order to run (selected regions of approximately 10 square miles will take 20 to 30 seconds to run).
 
+## Elevation Data files not included, download 1 degree by 1 degree img files for your desired region here (recommended resolution is 1 arc second):
+https://viewer.nationalmap.gov/basic/
+
 ## Dependencies:
 -numpy
 -pandas
